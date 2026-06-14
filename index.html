@@ -1280,34 +1280,34 @@ const radarData = {
 };
 
 function switchTab(el) {
-  document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.period-tab').forEach(function(t) { t.classList.remove('active'); });
   el.classList.add('active');
-  const tabName = el.textContent.trim();
-  const data = radarData[tabName];
+  var tabName = el.textContent.trim();
+  var data = radarData[tabName];
   if (!data) return;
-  const grid = document.querySelector('.donut-grid');
-  grid.innerHTML = '';
-  data.cards.forEach(c => {
-    const lines = [
-      c.d1 ? `<span style='color:${c.s1}'>■</span> ${c.d1}` : '',
-      c.d2 ? `<span style='color:${c.s2}'>■</span> ${c.d2}` : '',
-      c.d3 ? `<span style='color:${c.s3}'>■</span> ${c.d3}` : '',
-      c.st ? `<span style='color:var(--white)'>${c.st}</span>` : '',
-    ].filter(Boolean).join('<br>');
-    const circ = 188;
-    const a = c.da[0], b = c.da[1], cc2 = c.da[2];
-    grid.innerHTML += \`<div class="donut-card">
-      <div class="donut-card-label">\${c.l}</div>
-      <svg width="80" height="80" viewBox="0 0 80 80">
-        <circle cx="40" cy="40" r="30" fill="none" stroke="#2a2a2a" stroke-width="9"/>
-        \${a>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s1}" stroke-width="9" stroke-dasharray="\${a} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)"/>\` : ''}
-        \${b>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s2}" stroke-width="9" stroke-dasharray="\${b} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-\${a}"/>\` : ''}
-        \${cc2>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s3}" stroke-width="9" stroke-dasharray="\${cc2} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-\${a+b}"/>\` : ''}
-      </svg>
-      <div style="font-family:var(--font-mono);font-size:10px;color:var(--gray);text-align:center;line-height:1.8">\${lines}</div>
-    </div>\`;
+  var grid = document.querySelector('.donut-grid');
+  var html2 = '';
+  data.cards.forEach(function(c) {
+    var circ = 188;
+    var a = c.da[0], b = c.da[1], cc2 = c.da[2];
+    var lines = '';
+    if (c.d1) lines += '<span style="color:' + c.s1 + '">■</span> ' + c.d1 + '<br>';
+    if (c.d2) lines += '<span style="color:' + c.s2 + '">■</span> ' + c.d2 + '<br>';
+    if (c.d3) lines += '<span style="color:' + c.s3 + '">■</span> ' + c.d3 + '<br>';
+    if (c.st) lines += c.st;
+    var circles = '';
+    if (a > 0) circles += '<circle cx="40" cy="40" r="30" fill="none" stroke="' + c.s1 + '" stroke-width="9" stroke-dasharray="' + a + ' ' + circ + '" stroke-linecap="round" transform="rotate(-90 40 40)"/>';
+    if (b > 0) circles += '<circle cx="40" cy="40" r="30" fill="none" stroke="' + c.s2 + '" stroke-width="9" stroke-dasharray="' + b + ' ' + circ + '" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-' + a + '"/>';
+    if (cc2 > 0) circles += '<circle cx="40" cy="40" r="30" fill="none" stroke="' + c.s3 + '" stroke-width="9" stroke-dasharray="' + cc2 + ' ' + circ + '" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-' + (a+b) + '"/>';
+    html2 += '<div class="donut-card">';
+    html2 += '<div class="donut-card-label">' + c.l + '</div>';
+    html2 += '<svg width="80" height="80" viewBox="0 0 80 80"><circle cx="40" cy="40" r="30" fill="none" stroke="#2a2a2a" stroke-width="9"/>' + circles + '</svg>';
+    html2 += '<div style="font-family:var(--font-mono);font-size:10px;color:var(--gray);text-align:center;line-height:1.8">' + lines + '</div>';
+    html2 += '</div>';
   });
+  grid.innerHTML = html2;
 }
+
 </script>
 
 <!-- PROFILE PAGE -->

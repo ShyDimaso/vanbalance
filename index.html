@@ -1201,6 +1201,14 @@ function showPage(page) {
   if (page === 'ride')    { document.getElementById('rideForm').classList.remove('hidden'); return; }
   if (page === 'chat')    { document.getElementById('chatPage').classList.remove('hidden'); return; }
   if (page === 'radar')   { document.getElementById('radarPage').classList.remove('hidden'); return; }
+  if (page === 'profile') { document.getElementById('profilePage').classList.remove('hidden'); return; }
+  if (page === 'map') {
+    const mc = document.getElementById('map-container');
+    const isHidden = mc.style.display === 'none';
+    mc.style.display = isHidden ? 'block' : 'none';
+    if (isHidden) { setTimeout(() => map.invalidateSize(), 100); }
+    return;
+  }
 }
 
 function closePage(id) {
@@ -1246,10 +1254,98 @@ function sendMsg() {
 }
 
 // ── RADAR TABS ──
+const radarData = {
+  'СЕГОДНЯ':     { cards: [{l:'СЕЙЧАС',    d1:'23 вод.', d2:'+18 завтра', d3:'12 грузов', s1:'var(--red)',    s2:'var(--yellow)', s3:'var(--green)',  da:[94,57,37], st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'ЗАВТРА',     d1:'41 вод.', d2:'15 грузов', d3:'',          s1:'var(--red)',    s2:'var(--green)',  s3:'',               da:[120,45,0],  st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'СР. ПЯТН.', d1:'22 вод.', d2:'19 грузов', d3:'',          s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[80,70,0],   st:'🟡 НОРМА'},
+                            {l:'СР. ПОНЕД.',d1:'16 вод.', d2:'24 груза',  d3:'',          s1:'var(--green)',  s2:'var(--yellow)',s3:'',               da:[60,90,0],   st:'🟢 ДЕФИЦИТ'}] },
+  'ЗАВТРА':      { cards: [{l:'ПРОГНОЗ',   d1:'41 вод.', d2:'15 грузов', d3:'',          s1:'var(--red)',    s2:'var(--green)',  s3:'',               da:[130,45,0],  st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'К ВЕЧЕРУ',  d1:'28 вод.', d2:'18 грузов', d3:'',          s1:'var(--red)',    s2:'var(--green)',  s3:'',               da:[100,60,0],  st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'СР. СУББ.', d1:'19 вод.', d2:'22 груза',  d3:'',          s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[70,80,0],   st:'🟡 НОРМА'},
+                            {l:'ЛОНГИ',     d1:'Ожидается', d2:'5-8 рейсов','d3':'',      s1:'var(--green)',  s2:'var(--yellow)',s3:'',               da:[40,110,0],  st:'🟢 ЖДЁМ'}] },
+  'ЭТА НЕДЕЛЯ': { cards: [{l:'ПН',         d1:'12 вод.', d2:'28 грузов', d3:'',          s1:'var(--green)',  s2:'var(--yellow)', s3:'',              da:[45,105,0],  st:'🟢 ДЕФИЦИТ'},
+                            {l:'ВТ-СР',     d1:'18 вод.', d2:'20 грузов', d3:'',          s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[68,72,0],   st:'🟡 НОРМА'},
+                            {l:'ЧТ-ПТ',     d1:'35 вод.', d2:'14 грузов', d3:'',          s1:'var(--red)',    s2:'var(--green)',  s3:'',               da:[115,48,0],  st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'СБ-ВС',     d1:'8 вод.',  d2:'5 грузов',  d3:'',          s1:'var(--green)',  s2:'var(--yellow)',s3:'',               da:[30,20,0],   st:'⚪ ТИХО'}] },
+  'СР ПОНЕД.':  { cards: [{l:'УТРО',        d1:'8 вод.',  d2:'18 грузов', d3:'',          s1:'var(--green)',  s2:'var(--yellow)', s3:'',              da:[30,70,0],   st:'🟢 ДЕФИЦИТ'},
+                            {l:'ДЕНЬ',       d1:'14 вод.', d2:'22 груза',  d3:'',          s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[55,85,0],   st:'🟡 НОРМА'},
+                            {l:'ВЕЧЕР',      d1:'20 вод.', d2:'15 грузов', d3:'',          s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[78,58,0],   st:'🟡 НОРМА'},
+                            {l:'НОЧЬ',       d1:'3 вод.',  d2:'2 груза',   d3:'',          s1:'var(--green)',  s2:'var(--yellow)',s3:'',               da:[12,8,0],    st:'⚪ ТИХО'}] },
+  'МЕСЯЦ':      { cards: [{l:'НЕД 1',       d1:'~15 вод.','d2':'~20 груз.','d3':'',       s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[58,78,0],   st:'🟡 НОРМА'},
+                            {l:'НЕД 2',      d1:'~28 вод.','d2':'~14 груз.','d3':'',       s1:'var(--red)',    s2:'var(--green)',  s3:'',               da:[105,53,0],  st:'🔴 ПЕРЕГРУЗ'},
+                            {l:'НЕД 3',      d1:'~10 вод.','d2':'~25 груз.','d3':'',       s1:'var(--green)',  s2:'var(--yellow)',s3:'',               da:[40,96,0],   st:'🟢 ДЕФИЦИТ'},
+                            {l:'НЕД 4',      d1:'~22 вод.','d2':'~18 груз.','d3':'',       s1:'var(--yellow)', s2:'var(--green)', s3:'',               da:[84,69,0],   st:'🟡 НОРМА'}] },
+};
+
 function switchTab(el) {
   document.querySelectorAll('.period-tab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  const tabName = el.textContent.trim();
+  const data = radarData[tabName];
+  if (!data) return;
+  const grid = document.querySelector('.donut-grid');
+  grid.innerHTML = '';
+  data.cards.forEach(c => {
+    const lines = [
+      c.d1 ? `<span style='color:${c.s1}'>■</span> ${c.d1}` : '',
+      c.d2 ? `<span style='color:${c.s2}'>■</span> ${c.d2}` : '',
+      c.d3 ? `<span style='color:${c.s3}'>■</span> ${c.d3}` : '',
+      c.st ? `<span style='color:var(--white)'>${c.st}</span>` : '',
+    ].filter(Boolean).join('<br>');
+    const circ = 188;
+    const a = c.da[0], b = c.da[1], cc2 = c.da[2];
+    grid.innerHTML += \`<div class="donut-card">
+      <div class="donut-card-label">\${c.l}</div>
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="30" fill="none" stroke="#2a2a2a" stroke-width="9"/>
+        \${a>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s1}" stroke-width="9" stroke-dasharray="\${a} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)"/>\` : ''}
+        \${b>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s2}" stroke-width="9" stroke-dasharray="\${b} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-\${a}"/>\` : ''}
+        \${cc2>0 ? \`<circle cx="40" cy="40" r="30" fill="none" stroke="\${c.s3}" stroke-width="9" stroke-dasharray="\${cc2} \${circ}" stroke-linecap="round" transform="rotate(-90 40 40)" stroke-dashoffset="-\${a+b}"/>\` : ''}
+      </svg>
+      <div style="font-family:var(--font-mono);font-size:10px;color:var(--gray);text-align:center;line-height:1.8">\${lines}</div>
+    </div>\`;
+  });
 }
 </script>
+
+<!-- PROFILE PAGE -->
+<div id="profilePage" class="chat-overlay hidden">
+  <div class="chat-header">
+    <div class="chat-back" onclick="event.preventDefault();event.stopPropagation();closePage('profilePage')">‹</div>
+    <div>
+      <div class="chat-title">ПРОФИЛЬ</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray)">МОИ ДАННЫЕ</div>
+    </div>
+  </div>
+  <div style="padding:20px;display:flex;flex-direction:column;gap:16px;">
+    <div style="text-align:center;padding:24px 0;">
+      <div style="width:80px;height:80px;border-radius:50%;background:var(--card);border:2px solid var(--red);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;">🚐</div>
+      <div style="font-family:var(--font-display);font-size:24px;letter-spacing:2px;">ВОДИТЕЛЬ</div>
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--green);margin-top:4px;">● ВЕРИФИЦИРОВАН</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray);letter-spacing:1px;">МОЙ ТРАНСПОРТ</div>
+      <div style="font-size:15px;">🚐 Mercedes Sprinter 2500</div>
+      <div style="font-size:13px;color:var(--gray);">Payload: 3,000 lb · 143″×53″×70″</div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px;">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray);letter-spacing:1px;">СТАТИСТИКА</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:28px;color:var(--yellow);">47</div><div style="font-size:11px;color:var(--gray);font-family:var(--font-mono);">РЕЙСОВ</div></div>
+        <div style="text-align:center;"><div style="font-family:var(--font-display);font-size:28px;color:var(--green);">$0.94</div><div style="font-size:11px;color:var(--gray);font-family:var(--font-mono);">СР. СТАВКА</div></div>
+      </div>
+    </div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;">
+      <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray);letter-spacing:1px;margin-bottom:12px;">ИЗБРАННЫЕ ХАБЫ</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <span style="background:rgba(6,214,160,0.15);border:1px solid var(--green);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--green);">Колумбус</span>
+        <span style="background:rgba(6,214,160,0.15);border:1px solid var(--green);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--green);">Нэшвилл</span>
+        <span style="background:rgba(6,214,160,0.15);border:1px solid var(--green);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--green);">Хьюстон</span>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="margin-top:8px;" onclick="closePage('profilePage')">✓ Сохранить</button>
+  </div>
+</div>
+
 </body>
 </html>

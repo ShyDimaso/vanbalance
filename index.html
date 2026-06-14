@@ -84,7 +84,7 @@
     line-height: 1;
     opacity: 0;
     transform: translateY(20px);
-    animation: logoUp 0.6s ease-out 1s forwards;
+    animation: logoUp 0.6s ease-out 0.8s forwards;
   }
 
   .splash-logo span { color: var(--red); }
@@ -96,7 +96,7 @@
     letter-spacing: 3px;
     text-transform: uppercase;
     opacity: 0;
-    animation: fadeIn 0.5s ease-out 1.5s forwards;
+    animation: fadeIn 0.5s ease-out 1.3s forwards;
   }
 
   .splash-bar {
@@ -112,7 +112,7 @@
   .splash-bar-fill {
     height: 100%; width: 0;
     background: var(--red);
-    animation: barFill 0.8s ease-out 1.7s forwards;
+    animation: barFill 1.5s ease-out 1.5s forwards;
   }
 
   @keyframes logoUp {
@@ -138,11 +138,11 @@
     flex-direction: column;
     height: 100dvh;
   }
-  #app.visible { display: flex; }
+  #app.visible { display: block; }
 
   /* ── TOP BAR ── */
   .topbar {
-    position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     padding: 12px 16px;
     display: flex; align-items: center; justify-content: space-between;
     background: linear-gradient(to bottom, rgba(10,10,10,0.95) 0%, transparent 100%);
@@ -178,8 +178,11 @@
 
   /* ── MAP ── */
   #map-container {
-    flex: 1;
-    position: relative;
+    position: absolute;
+    top: 60px;
+    left: 0; right: 0;
+    bottom: 90px;
+    z-index: 1;
   }
 
   #map {
@@ -387,7 +390,7 @@
 
   /* ── BOTTOM NAV ── */
   .bottom-nav {
-    position: absolute; bottom: 0; left: 0; right: 0; z-index: 100;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
     padding: 0 8px 8px;
     background: linear-gradient(to top, rgba(10,10,10,1) 0%, transparent 100%);
   }
@@ -747,6 +750,12 @@
   <!-- MAP -->
   <div id="map-container">
     <div id="map"></div>
+  <div style="position:absolute;bottom:12px;left:12px;z-index:500;background:rgba(17,17,17,0.92);border:1px solid #2a2a2a;border-radius:12px;padding:10px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.8">
+    <div style="color:#888;letter-spacing:1px;margin-bottom:4px">ЦИФРА = ВОДИТЕЛЕЙ</div>
+    <div><span style="color:#e63946">●</span> КРАСНЫЙ — перегруз</div>
+    <div><span style="color:#ffd60a">●</span> ЖЁЛТЫЙ — норма</div>
+    <div><span style="color:#06d6a0">●</span> ЗЕЛЁНЫЙ — дефицит</div>
+  </div>
   </div>
 
   <!-- BOTTOM NAV -->
@@ -902,7 +911,7 @@
 <!-- CHAT -->
 <div id="chatPage" class="chat-overlay hidden">
   <div class="chat-header">
-    <div class="chat-back" onclick="closePage('chatPage')">‹</div>
+    <div class="chat-back" onclick="event.preventDefault();event.stopPropagation();closePage('chatPage')">‹</div>
     <div>
       <div class="chat-title">ЧАТ ХАБА</div>
       <div style="font-family:var(--font-mono);font-size:11px;color:var(--gray)" id="chatHubName">ВЫБЕРИТЕ ХАБ НА КАРТЕ</div>
@@ -937,7 +946,7 @@
 <!-- RADAR -->
 <div id="radarPage" class="radar-overlay hidden">
   <div class="radar-header">
-    <div class="chat-back" onclick="closePage('radarPage')">‹</div>
+    <div class="chat-back" onclick="event.preventDefault();event.stopPropagation();closePage('radarPage')">‹</div>
     <div>
       <div class="radar-title">РАДАР</div>
       <div class="radar-subtitle">АНАЛИТИКА · ДЕНВЕР · CO</div>
@@ -1077,7 +1086,7 @@ window.addEventListener('load', () => {
       app.classList.add('visible');
       initMap();
     }, 500);
-  }, 2600);
+  }, 3500);
 });
 
 function initMap() {
